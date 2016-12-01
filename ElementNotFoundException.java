@@ -1,21 +1,22 @@
-package termproject;
+package javatermproject;
 
 /**
- * Title:        Term Project 2-4 Trees
- * Description:
- * Copyright:    Copyright (c) 2001
+ * Title: Term Project 2-4 Trees Description: Copyright: Copyright (c) 2001
  * Company:
+ *
  * @author
  * @version 1.0
  */
+public class ElementNotFoundException extends RuntimeException
+{
 
-
-public class ElementNotFoundException extends RuntimeException {
-
-    public ElementNotFoundException() {
-        super ("Problem with TwoFourTree");
+    public ElementNotFoundException()
+    {
+        super( "Problem with TwoFourTree" );
     }
-    public ElementNotFoundException(String errorMsg) {
-        super (errorMsg);
+
+    public ElementNotFoundException( String errorMsg )
+    {
+        super( errorMsg );
     }
 }

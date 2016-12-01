@@ -1,17 +1,16 @@
-package termproject;
+package javatermproject;
 
 /**
- * Title:        Project #7
- * Description:
- * Copyright:    Copyright (c) 2001
- * Company:
+ * Title: Project #7 Description: Copyright: Copyright (c) 2001 Company:
+ *
  * @author
  * @version 1.0
  */
+public class InvalidIntegerException extends RuntimeException
+{
 
-public class InvalidIntegerException extends RuntimeException {
-
-    public InvalidIntegerException(String errorMsg) {
-        super (errorMsg);
+    public InvalidIntegerException( String errorMsg )
+    {
+        super( errorMsg );
     }
 }
