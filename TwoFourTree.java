@@ -157,14 +157,14 @@ public class TwoFourTree implements Dictionary
         myTree = new TwoFourTree( myComp );
         final int TEST_SIZE = 10000;
 
-        for ( int i = 0; i < TEST_SIZE; i++ )
+        for ( int i = 0; i < TEST_SIZE; ++i )
         {
             myTree.insertElement( new Integer( i ), new Integer( i ) );
             //          myTree.printAllElements();
             //         myTree.checkTree();
         }
         System.out.println( "removing" );
-        for ( int i = 0; i < TEST_SIZE; i++ )
+        for ( int i = 0; i < TEST_SIZE; ++i )
         {
             int out = ( Integer ) myTree.removeElement( new Integer( i ) );
             if ( out != i )
@@ -198,14 +198,14 @@ public class TwoFourTree implements Dictionary
         {
             return;
         }
-        for ( int i = 0; i < indent; i++ )
+        for ( int i = 0; i < indent; ++i )
         {
             System.out.print( " " );
         }
         printTFNode( start );
         indent += 4;
         int numChildren = start.getNumItems() + 1;
-        for ( int i = 0; i < numChildren; i++ )
+        for ( int i = 0; i < numChildren; ++i )
         {
             printTree( start.getChild( i ), indent );
         }
@@ -214,7 +214,7 @@ public class TwoFourTree implements Dictionary
     public void printTFNode( TFNode node )
     {
         int numItems = node.getNumItems();
-        for ( int i = 0; i < numItems; i++ )
+        for ( int i = 0; i < numItems; ++i )
         {
             System.out.print( ( ( Item ) node.getItem( i ) ).element() + " " );
         }

@@ -68,7 +68,7 @@ public class TFNode
             throw new TFNodeException();
         }
         nodeItems[ index ] = data;
-        numItems++;
+        ++numItems;
     }
     // this function inserts an item into the node, and adjusts into child
     // pointers to add the proper corresponding pointer
@@ -80,7 +80,7 @@ public class TFNode
             throw new TFNodeException();
         }
         // adjust Items
-        for ( int ind = numItems; ind > index; ind-- )
+        for ( int ind = numItems; ind > index; --ind )
         {
             nodeItems[ ind ] = nodeItems[ ind - 1 ];
         }
@@ -90,12 +90,12 @@ public class TFNode
         // pointers 1 and 2 to point to 1; this is because whoever called
         // this function will fix one of them later; index 0 doesn't change;
         // pointer 3 becomes pointer 2; pointer 4 becomes 3, etc.
-        for ( int ind = numItems + 1; ind > index; ind-- )
+        for ( int ind = numItems + 1; ind > index; --ind )
         {
             nodeChildren[ ind ] = nodeChildren[ ind - 1 ];
         }
 
-        numItems++;
+        ++numItems;
     }
 
     // this method removes item, and shrinks array
