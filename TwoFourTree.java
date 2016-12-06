@@ -2,18 +2,26 @@ package javatermproject;
 
 /**
  * Title: Term Project 2-4 Trees Description: Copyright: Copyright (c) 2001
- * Company:
+ * Company: Brennon Gee, Jacob Van Veldhuzien
+ * Date last modified: 5 Dec 2016
+ * Changelog:
+ * 5.12.16: Changed formatting, added @Override tags, basic commenting - Jacob
  *
  * @author
  * @version 1.0
  */
 public class TwoFourTree implements Dictionary
 {
-
+    //Class vars
     private Comparator treeComp;
-    private int size = 0;
+    private int size = 0;                           //Remember to in/decrement where necessary
     private TFNode treeRoot = null;
 
+    
+    /**
+     * Constructors
+     * @param comp 
+     */
     public TwoFourTree( Comparator comp )
     {
         treeComp = comp;
@@ -29,6 +37,10 @@ public class TwoFourTree implements Dictionary
         treeRoot = root;
     }
 
+    /**
+     * Size functions
+     * @return 
+     */
     @Override
     public int size()
     {
@@ -48,7 +60,7 @@ public class TwoFourTree implements Dictionary
      * @return object corresponding to key; null if not found
      */
     @Override
-    public Object findElement( Object key )
+    public Object findElement( Object key )   //KWF: This needs to be implemented first
     {
         return null;
     }
@@ -62,6 +74,7 @@ public class TwoFourTree implements Dictionary
     @Override
     public void insertElement( Object key, Object element )
     {
+        
     }
 
     /**
