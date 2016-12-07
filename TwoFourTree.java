@@ -2,10 +2,12 @@ package javatermproject;
 
 /**
  * Title: Term Project 2-4 Trees Description: Copyright: Copyright (c) 2001
- * Company: Brennon Gee, Jacob Van Veldhuzien
- * Date last modified: 5 Dec 2016
- * Changelog:
- * 5.12.16: Changed formatting, added @Override tags, basic commenting - Jacob
+ * Company: Brennon Gee, Jacob Van Veldhuzien Date last modified: 5 Dec 2016
+ * Changelog: 
+ * 5.12.16: Changed formatting, added @Override tags, basic
+ * commenting - Jacob
+ * 7.12.16: Changed format so G's code no longer violates CS style guide, edited InsertItem slightly, added FFGE() (will need
+ * to update soon), added Javadoc support
  *
  * @author
  * @version 1.0
@@ -17,10 +19,10 @@ public class TwoFourTree implements Dictionary
     private int size = 0;                           //Remember to in/decrement where necessary
     private TFNode treeRoot = null;
 
-    
     /**
      * Constructors
-     * @param comp 
+     *
+     * @param comp
      */
     public TwoFourTree( Comparator comp )
     {
@@ -39,7 +41,8 @@ public class TwoFourTree implements Dictionary
 
     /**
      * Size functions
-     * @return 
+     *
+     * @return
      */
     @Override
     public int size()
@@ -74,7 +77,37 @@ public class TwoFourTree implements Dictionary
     @Override
     public void insertElement( Object key, Object element )
     {
-        
+        throw new UnsupportedOperationException( "Not implemented yet" );
+    }
+
+    /**
+     * Finds and returns the first TFNode with a value greater than or equal to
+     * the Item given
+     *
+     * @param itm
+     * @return
+     */
+    public TFNode FFGE( Item itm )
+    {
+        boolean foundGreater = false;
+        TFNode pos = treeRoot;
+        while ( pos.getNumItems() != 0 && !foundGreater )
+        {
+            for ( int k = 0; k < 3; ++k )
+            {
+                if ( ( Integer ) pos.getItem( k ).element() >= ( Integer ) itm.element() )
+                {
+                    foundGreater = true;
+                }
+                else
+                {
+                    pos = pos.getChild( 2 );  //Go down the right tree
+                    //This will almost definitely cause logical errors
+                }
+            }
+        }
+
+        return pos;
     }
 
     /**
@@ -89,6 +122,141 @@ public class TwoFourTree implements Dictionary
     public Object removeElement( Object key ) throws ElementNotFoundException
     {
         return null;
+    }
+
+    /**
+     * This prints all elements and their indices (?) throughout the tree
+     */
+    public void printAllElements()
+    {
+        int indent = 0;
+        if ( root() == null )
+        {
+            System.out.println( "The tree is empty" );
+        }
+        else
+        {
+            printTree( root(), indent );
+        }
+    }
+
+    /**
+     * This will print out all elements in the tree; subroutine of
+     * printAllElements()
+     *
+     * @param start
+     * @param indent
+     */
+    public void printTree( TFNode start, int indent )
+    {
+        if ( start == null )
+        {
+            return;
+        }
+        for ( int i = 0; i < indent; ++i )
+        {
+            System.out.print( " " );
+        }
+        printTFNode( start );
+        indent += 4;
+        int numChildren = start.getNumItems() + 1;
+        for ( int i = 0; i < numChildren; ++i )
+        {
+            printTree( start.getChild( i ), indent );
+        }
+    }
+
+    /**
+     * This prints out the individual values inside of the TFNodes in the tree
+     *
+     * @param node
+     */
+    public void printTFNode( TFNode node )
+    {
+        int numItems = node.getNumItems();
+        for ( int i = 0; i < numItems; ++i )
+        {
+            System.out.print( ( ( Item ) node.getItem( i ) ).element() + " " );
+        }
+        System.out.println();
+    }
+
+    /**
+     * This performs checkTreeFromNode on treeRoot
+     */
+    // checks if tree is properly hooked up, i.e., children point to parents
+    public void checkTree()
+    {
+        checkTreeFromNode( treeRoot );
+    }
+
+    /**
+     * Actually walks through the tree from the given TFNode to determine
+     * children
+     *
+     * @param start
+     */
+    private void checkTreeFromNode( TFNode start )
+    {
+        if ( start == null )
+        {
+            return;
+        }
+
+        if ( start.getParent() != null )
+        {
+            TFNode parent = start.getParent();
+            int childIndex = 0;
+            for ( childIndex = 0; childIndex <= parent.getNumItems(); childIndex++ )
+            {
+                if ( parent.getChild( childIndex ) == start )
+                {
+                    break;
+                }
+            }
+            // if child wasn't found, print problem
+            if ( childIndex > parent.getNumItems() )
+            {
+                System.out.println( "Child to parent confusion" );
+                printTFNode( start );
+            }
+        }
+
+        if ( start.getChild( 0 ) != null )
+        {
+            for ( int childIndex = 0; childIndex <= start.getNumItems(); childIndex++ )
+            {
+                if ( start.getChild( childIndex ) == null )
+                {
+                    System.out.println( "Mixed null and non-null children" );
+                    printTFNode( start );
+                }
+                else
+                {
+                    if ( start.getChild( childIndex ).getParent() != start )
+                    {
+                        System.out.println( "Parent to child confusion" );
+                        printTFNode( start );
+                    }
+                    for ( int i = childIndex - 1; i >= 0; i-- )
+                    {
+                        if ( start.getChild( i ) == start.getChild( childIndex ) )
+                        {
+                            System.out.println( "Duplicate children of node" );
+                            printTFNode( start );
+                        }
+                    }
+                }
+
+            }
+        }
+
+        int numChildren = start.getNumItems() + 1;
+        for ( int childIndex = 0; childIndex < numChildren; childIndex++ )
+        {
+            checkTreeFromNode( start.getChild( childIndex ) );
+        }
+
     }
 
     public static void main( String[] args )
@@ -177,116 +345,5 @@ public class TwoFourTree implements Dictionary
             }
         }
         System.out.println( "done" );
-    }
-
-    public void printAllElements()
-    {
-        int indent = 0;
-        if ( root() == null )
-        {
-            System.out.println( "The tree is empty" );
-        }
-        else
-        {
-            printTree( root(), indent );
-        }
-    }
-
-    public void printTree( TFNode start, int indent )
-    {
-        if ( start == null )
-        {
-            return;
-        }
-        for ( int i = 0; i < indent; ++i )
-        {
-            System.out.print( " " );
-        }
-        printTFNode( start );
-        indent += 4;
-        int numChildren = start.getNumItems() + 1;
-        for ( int i = 0; i < numChildren; ++i )
-        {
-            printTree( start.getChild( i ), indent );
-        }
-    }
-
-    public void printTFNode( TFNode node )
-    {
-        int numItems = node.getNumItems();
-        for ( int i = 0; i < numItems; ++i )
-        {
-            System.out.print( ( ( Item ) node.getItem( i ) ).element() + " " );
-        }
-        System.out.println();
-    }
-
-    // checks if tree is properly hooked up, i.e., children point to parents
-    public void checkTree()
-    {
-        checkTreeFromNode( treeRoot );
-    }
-
-    private void checkTreeFromNode( TFNode start )
-    {
-        if ( start == null )
-        {
-            return;
-        }
-
-        if ( start.getParent() != null )
-        {
-            TFNode parent = start.getParent();
-            int childIndex = 0;
-            for ( childIndex = 0; childIndex <= parent.getNumItems(); childIndex++ )
-            {
-                if ( parent.getChild( childIndex ) == start )
-                {
-                    break;
-                }
-            }
-            // if child wasn't found, print problem
-            if ( childIndex > parent.getNumItems() )
-            {
-                System.out.println( "Child to parent confusion" );
-                printTFNode( start );
-            }
-        }
-
-        if ( start.getChild( 0 ) != null )
-        {
-            for ( int childIndex = 0; childIndex <= start.getNumItems(); childIndex++ )
-            {
-                if ( start.getChild( childIndex ) == null )
-                {
-                    System.out.println( "Mixed null and non-null children" );
-                    printTFNode( start );
-                }
-                else
-                {
-                    if ( start.getChild( childIndex ).getParent() != start )
-                    {
-                        System.out.println( "Parent to child confusion" );
-                        printTFNode( start );
-                    }
-                    for ( int i = childIndex - 1; i >= 0; i-- )
-                    {
-                        if ( start.getChild( i ) == start.getChild( childIndex ) )
-                        {
-                            System.out.println( "Duplicate children of node" );
-                            printTFNode( start );
-                        }
-                    }
-                }
-
-            }
-        }
-
-        int numChildren = start.getNumItems() + 1;
-        for ( int childIndex = 0; childIndex < numChildren; childIndex++ )
-        {
-            checkTreeFromNode( start.getChild( childIndex ) );
-        }
-
     }
 }
