@@ -74,9 +74,76 @@ public class TwoFourTree implements Dictionary
      * @param element to be inserted
      */
     @Override
-    public void insertElement( Object key, Object element )
+    public void insertElement( Object key, Object element ) throws TFNodeException
     {
-        throw new UnsupportedOperationException( "Not implemented yet" );
+        //If bad val given
+        if ( !treeComp.isComparable( key ) || !treeComp.isComparable( element ) )
+        {
+            throw new TFNodeException( "Only integers may be inserted into the tree" );
+        }
+        //Otherwise
+        else
+        {
+            Item itm = new Item( key, element );
+            TFNode pos = FFGE( itm );
+
+            if ( pos.getNumItems() == 0 )
+            {
+                pos.addItem( 0, itm );
+            }
+            else
+            {
+                int index;
+                for ( int k = 0; k < pos.getNumItems(); ++k )
+                {
+                    if ( treeComp.isLessThanOrEqualTo( itm.element(), pos.getItem( k ) ) )
+                    {
+                        index = k;
+                        pos.insertItem( index, itm );
+                    }
+                }
+            }
+
+            //Check for/handle overflow
+            handleOverflow( pos );
+        }
+    }
+
+    /**
+     * Handles overflow of TFN values
+     *
+     * @param pos
+     */
+    public void handleOverflow( TFNode pos )
+    {
+        Item item2 = new Item();
+        TFNode nN = new TFNode();
+        TFNode par = pos.getParent();
+        int index;
+
+        if ( pos.getNumItems() == 4 )
+        {
+            if ( pos == treeRoot )
+            {
+                treeRoot = new TFNode();
+                treeRoot.setChild( 0, pos );
+                pos.setParent( treeRoot );
+            }
+            item2 = pos.getItem( 2 );
+            pos.deleteItem( 2 );
+            nN.addItem( 0, pos.getItem( 3 ) );
+        }
+
+        for ( int k = 0; k < par.getNumItems(); ++k )
+        {
+            if ( treeComp.isLessThanOrEqualTo( item2.element(), par.getItem( k ) ) )
+            {
+                index = k;
+                par.insertItem( index, item2 );
+            }
+        }
+
+        handleOverflow( par );
     }
 
     /**
@@ -102,10 +169,10 @@ public class TwoFourTree implements Dictionary
                     index = k;
                 }
             }
-            
+
             if ( !foundGreater )   //If no greater val found
             {
-                if ( pos.getChild( 2 ) != null )
+                if ( pos.getChild( 2 ) != null )  //Check to see if itemArr is full INDEV
                 {
                     pos = pos.getChild( 2 );  //Go down the right tree
                 }
@@ -114,11 +181,15 @@ public class TwoFourTree implements Dictionary
                     return pos.getChild( 2 );
                 }
             }
-            else
+            else  //Greater val found
             {
-                try
+                try  //INDEV
                 {
                     pos = pos.getChild( index );
+                    if ( pos == null )
+                    {
+                        pos = pos.getParent();
+                    }
                 }
                 catch ( ArrayIndexOutOfBoundsException aioobe )
                 {
