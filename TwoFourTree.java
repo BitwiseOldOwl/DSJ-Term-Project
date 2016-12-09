@@ -3,11 +3,10 @@ package javatermproject;
 /**
  * Title: Term Project 2-4 Trees Description: Copyright: Copyright (c) 2001
  * Company: Brennon Gee, Jacob Van Veldhuzien Date last modified: 5 Dec 2016
- * Changelog: 
- * 5.12.16: Changed formatting, added @Override tags, basic
- * commenting - Jacob
- * 7.12.16: Changed format so G's code no longer violates CS style guide, edited InsertItem slightly, added FFGE() (will need
- * to update soon), added Javadoc support
+ * Changelog: 5.12.16: Changed formatting, added @Override tags, basic
+ * commenting - Jacob 7.12.16: Changed format so G's code no longer violates CS
+ * style guide, edited InsertItem slightly, added FFGE() (will need to update
+ * soon), added Javadoc support
  *
  * @author
  * @version 1.0
@@ -90,19 +89,40 @@ public class TwoFourTree implements Dictionary
     public TFNode FFGE( Item itm )
     {
         boolean foundGreater = false;
+        int index = -1;
         TFNode pos = treeRoot;
-        while ( pos.getNumItems() != 0 && !foundGreater )
+        //While starts here
+        while ( pos.getNumItems() != 0 && !foundGreater )  //The pos.gNI() is a potential source of bugs KWF
         {
             for ( int k = 0; k < 3; ++k )
             {
                 if ( ( Integer ) pos.getItem( k ).element() >= ( Integer ) itm.element() )
                 {
                     foundGreater = true;
+                    index = k;
+                }
+            }
+            
+            if ( !foundGreater )   //If no greater val found
+            {
+                if ( pos.getChild( 2 ) != null )
+                {
+                    pos = pos.getChild( 2 );  //Go down the right tree
                 }
                 else
                 {
-                    pos = pos.getChild( 2 );  //Go down the right tree
-                    //This will almost definitely cause logical errors
+                    return pos.getChild( 2 );
+                }
+            }
+            else
+            {
+                try
+                {
+                    pos = pos.getChild( index );
+                }
+                catch ( ArrayIndexOutOfBoundsException aioobe )
+                {
+                    System.out.println( "Index never initialized" );  //Debugging KWF
                 }
             }
         }
@@ -182,9 +202,9 @@ public class TwoFourTree implements Dictionary
     }
 
     /**
-     * This performs checkTreeFromNode on treeRoot
+     * This performs checkTreeFromNode on treeRoot. Checks if tree is properly
+     * hooked up, i.e., children point to parents
      */
-    // checks if tree is properly hooked up, i.e., children point to parents
     public void checkTree()
     {
         checkTreeFromNode( treeRoot );
