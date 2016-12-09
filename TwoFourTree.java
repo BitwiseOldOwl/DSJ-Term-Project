@@ -94,7 +94,7 @@ public class TwoFourTree implements Dictionary
             }
             else
             {
-                //pos = FFGE( itm );
+                pos = searchTree( itm );
 
                 if ( pos.getNumItems() == 0 )
                 {
