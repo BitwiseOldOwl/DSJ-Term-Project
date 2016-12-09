@@ -108,15 +108,8 @@ public class TwoFourTree implements Dictionary
                         index = k;
                         if ( treeComp.isLessThanOrEqualTo( itm.element(), pos.getItem( k ).element() ) )
                         {
-                            if ( index == 0 )
-                            {
-                                
-                            }
-                            else
-                            {
-                                pos.insertItem( index, itm );
-                                k = pos.getNumItems();  //Killcon
-                            }
+                            pos.insertItem( index, itm );
+                            k = pos.getNumItems();  //Killcon
                         }
                         else if ( k == pos.getNumItems() - 1 )
                         {
@@ -207,7 +200,8 @@ public class TwoFourTree implements Dictionary
                 }
             }
             else //Greater val found
-             if ( pos.getChild( index ) != null )
+            {
+                if ( pos.getChild( index ) != null )
                 {
                     pos = pos.getChild( index );
                 }
@@ -215,6 +209,7 @@ public class TwoFourTree implements Dictionary
                 {
                     return pos;
                 }
+            }
         }
 
         return pos;
