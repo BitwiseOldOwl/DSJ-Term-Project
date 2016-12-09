@@ -64,7 +64,7 @@ public class TwoFourTree implements Dictionary
     @Override
     public Object findElement( Object key )   //KWF: This needs to be implemented first
     {
-        return null;
+        throw new UnsupportedOperationException( "Not supported yet" );
     }
 
     /**
@@ -74,7 +74,7 @@ public class TwoFourTree implements Dictionary
      * @param element to be inserted
      */
     @Override
-    public void insertElement( Object key, Object element ) throws TFNodeException
+    public void insertElement( Object key, Object element ) throws TFNodeException  //INDEV KWF HOOK UP KIDS
     {
         //If bad val given
         if ( !treeComp.isComparable( key ) || !treeComp.isComparable( element ) )
@@ -85,27 +85,49 @@ public class TwoFourTree implements Dictionary
         else
         {
             Item itm = new Item( key, element );
-            TFNode pos = FFGE( itm );
+            TFNode pos;
 
-            if ( pos.getNumItems() == 0 )
+            if ( treeRoot == null )
             {
-                pos.addItem( 0, itm );
+                treeRoot = new TFNode();
+                treeRoot.addItem( 0, itm );
             }
             else
             {
-                int index;
-                for ( int k = 0; k < pos.getNumItems(); ++k )
+                pos = FFGE( itm );
+
+                if ( pos.getNumItems() == 0 )
                 {
-                    if ( treeComp.isLessThanOrEqualTo( itm.element(), pos.getItem( k ) ) )
+                    pos.addItem( 0, itm );
+                }
+                else
+                {
+                    int index;
+                    for ( int k = 0; k < pos.getNumItems(); ++k )
                     {
                         index = k;
-                        pos.insertItem( index, itm );
+                        if ( treeComp.isLessThanOrEqualTo( itm.element(), pos.getItem( k ).element() ) )
+                        {
+                            if ( index == 0 )
+                            {
+                                
+                            }
+                            else
+                            {
+                                pos.insertItem( index, itm );
+                                k = pos.getNumItems();  //Killcon
+                            }
+                        }
+                        else if ( k == pos.getNumItems() - 1 )
+                        {
+                            pos.addItem( pos.getNumItems(), itm );
+                        }
                     }
                 }
-            }
 
-            //Check for/handle overflow
-            handleOverflow( pos );
+                //Check for/handle overflow
+                handleOverflow( pos );
+            }
         }
     }
 
@@ -129,21 +151,24 @@ public class TwoFourTree implements Dictionary
                 treeRoot.setChild( 0, pos );
                 pos.setParent( treeRoot );
             }
-            item2 = pos.getItem( 2 );
-            pos.deleteItem( 2 );
-            nN.addItem( 0, pos.getItem( 3 ) );
+
+            item2 = pos.removeItem( 2 );
+            nN.addItem( 0, pos.getItem( 2 ) );  //On the "new" 2
         }
 
-        for ( int k = 0; k < par.getNumItems(); ++k )
+        if ( par != null )
         {
-            if ( treeComp.isLessThanOrEqualTo( item2.element(), par.getItem( k ) ) )
+            for ( int k = 0; k < par.getNumItems(); ++k )
             {
-                index = k;
-                par.insertItem( index, item2 );
+                if ( treeComp.isLessThanOrEqualTo( item2.element(), par.getItem( k ) ) )
+                {
+                    index = k;
+                    par.insertItem( index, item2 );
+                }
             }
-        }
 
-        handleOverflow( par );
+            handleOverflow( par );
+        }
     }
 
     /**
@@ -159,9 +184,9 @@ public class TwoFourTree implements Dictionary
         int index = -1;
         TFNode pos = treeRoot;
         //While starts here
-        while ( pos.getNumItems() != 0 && !foundGreater )  //The pos.gNI() is a potential source of bugs KWF
+        while ( !foundGreater )
         {
-            for ( int k = 0; k < 3; ++k )
+            for ( int k = 0; k < pos.getNumItems(); ++k )
             {
                 if ( ( Integer ) pos.getItem( k ).element() >= ( Integer ) itm.element() )
                 {
@@ -172,30 +197,24 @@ public class TwoFourTree implements Dictionary
 
             if ( !foundGreater )   //If no greater val found
             {
-                if ( pos.getChild( 2 ) != null )  //Check to see if itemArr is full INDEV
+                if ( pos.getChild( 2 ) != null )  //Check to see if itemArr is full
                 {
-                    pos = pos.getChild( 2 );  //Go down the right tree
+                    pos = pos.getChild( 2 );
                 }
                 else
                 {
-                    return pos.getChild( 2 );
+                    return pos;
                 }
             }
-            else  //Greater val found
-            {
-                try  //INDEV
+            else //Greater val found
+             if ( pos.getChild( index ) != null )
                 {
                     pos = pos.getChild( index );
-                    if ( pos == null )
-                    {
-                        pos = pos.getParent();
-                    }
                 }
-                catch ( ArrayIndexOutOfBoundsException aioobe )
+                else
                 {
-                    System.out.println( "Index never initialized" );  //Debugging KWF
+                    return pos;
                 }
-            }
         }
 
         return pos;
@@ -212,7 +231,7 @@ public class TwoFourTree implements Dictionary
     @Override
     public Object removeElement( Object key ) throws ElementNotFoundException
     {
-        return null;
+        throw new UnsupportedOperationException( "Remove not yet supported" );
     }
 
     /**
