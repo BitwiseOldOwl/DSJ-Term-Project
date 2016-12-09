@@ -85,7 +85,7 @@ public class TwoFourTree implements Dictionary
         else
         {
             Item itm = new Item( key, element );
-            TFNode pos;
+            TFNode pos = null;  //Debugging KWF
 
             if ( treeRoot == null )
             {
@@ -94,7 +94,7 @@ public class TwoFourTree implements Dictionary
             }
             else
             {
-                pos = FFGE( itm );
+                //pos = FFGE( itm );
 
                 if ( pos.getNumItems() == 0 )
                 {
@@ -106,7 +106,7 @@ public class TwoFourTree implements Dictionary
                     for ( int k = 0; k < pos.getNumItems(); ++k )
                     {
                         index = k;
-                        if ( treeComp.isLessThanOrEqualTo( itm.element(), pos.getItem( k ).element() ) )
+                        if ( treeComp.isLessThanOrEqualTo( itm.key(), pos.getItem( k ).key() ) )
                         {
                             pos.insertItem( index, itm );
                             k = pos.getNumItems();  //Killcon
@@ -165,54 +165,71 @@ public class TwoFourTree implements Dictionary
     }
 
     /**
-     * Finds and returns the first TFNode with a value greater than or equal to
-     * the Item given
+     * Finds and returns the first TFNode at which a new Item can be inserted
+     * into the tree
      *
      * @param itm
      * @return
      */
-    public TFNode FFGE( Item itm )
+    public TFNode searchTree( Item itm )
+    {
+        int ffgeRslt;
+        TFNode pos = treeRoot;
+
+        ffgeRslt = FFGE( itm, pos );
+
+        if ( ffgeRslt == -1 )   //If no greater val found
+        {
+            if ( pos.getChild( 2 ) != null )  //Check to see if itemArr is full
+            {
+                pos = pos.getChild( 2 );
+            }
+            else
+            {
+                return pos;
+            }
+        }
+        else if ( pos.getChild( ffgeRslt ) != null )
+        {
+            pos = pos.getChild( ffgeRslt );
+        }
+        else
+        {
+            return pos;
+        }
+
+        return pos;
+    }
+
+    /**
+     * Finds and returns the index of the first Item in a node with a value
+     * greater than or equal to the Item given. If this function returns a -1,
+     * there was no Item in the node with a key value greater than or equal to
+     * that of the item passed.
+     *
+     * @param itm
+     * @param tfn
+     * @return
+     */
+    public int FFGE( Item itm, TFNode tfn )
     {
         boolean foundGreater = false;
+        TFNode pos = tfn;
         int index = -1;
-        TFNode pos = treeRoot;
-        //While starts here
-        while ( !foundGreater )
+
+        while ( !foundGreater )  //While we have found no greater value than that of itm's key
         {
-            for ( int k = 0; k < pos.getNumItems(); ++k )
+            for ( int k = 0; k < pos.getNumItems(); ++k )  //Iterate thru TFN's Item array
             {
-                if ( ( Integer ) pos.getItem( k ).element() >= ( Integer ) itm.element() )
+                if ( ( Integer ) pos.getItem( k ).key() >= ( Integer ) itm.key() )  //If an Item's key in pos >= itm's key
                 {
                     foundGreater = true;
                     index = k;
                 }
             }
-
-            if ( !foundGreater )   //If no greater val found
-            {
-                if ( pos.getChild( 2 ) != null )  //Check to see if itemArr is full
-                {
-                    pos = pos.getChild( 2 );
-                }
-                else
-                {
-                    return pos;
-                }
-            }
-            else //Greater val found
-            {
-                if ( pos.getChild( index ) != null )
-                {
-                    pos = pos.getChild( index );
-                }
-                else
-                {
-                    return pos;
-                }
-            }
         }
 
-        return pos;
+        return index;
     }
 
     /**
@@ -371,17 +388,19 @@ public class TwoFourTree implements Dictionary
 
         Integer myInt1 = new Integer( 47 );
         myTree.insertElement( myInt1, myInt1 );
+        myTree.printAllElements();
         Integer myInt2 = new Integer( 83 );
         myTree.insertElement( myInt2, myInt2 );
+        myTree.printAllElements();
         Integer myInt3 = new Integer( 22 );
         myTree.insertElement( myInt3, myInt3 );
-
+        myTree.printAllElements();
         Integer myInt4 = new Integer( 16 );
         myTree.insertElement( myInt4, myInt4 );
-
+        myTree.printAllElements();
         Integer myInt5 = new Integer( 49 );
         myTree.insertElement( myInt5, myInt5 );
-
+        myTree.printAllElements();
         Integer myInt6 = new Integer( 100 );
         myTree.insertElement( myInt6, myInt6 );
 
