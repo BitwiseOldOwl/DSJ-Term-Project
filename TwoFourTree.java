@@ -94,7 +94,7 @@ public class TwoFourTree implements Dictionary
             }
             else
             {
-                pos = searchTree( itm );
+                pos = searchTree( itm, treeRoot );
 
                 if ( pos.getNumItems() == 0 )
                 {
@@ -102,19 +102,14 @@ public class TwoFourTree implements Dictionary
                 }
                 else
                 {
-                    int index;
-                    for ( int k = 0; k < pos.getNumItems(); ++k )
+                    int index = FFGE( itm, pos );
+                    if( index == -1 )
                     {
-                        index = k;
-                        if ( treeComp.isLessThanOrEqualTo( itm.key(), pos.getItem( k ).key() ) )
-                        {
-                            pos.insertItem( index, itm );
-                            k = pos.getNumItems();  //Killcon
-                        }
-                        else if ( k == pos.getNumItems() - 1 )
-                        {
-                            pos.addItem( pos.getNumItems(), itm );
-                        }
+                        pos.addItem( pos.getNumItems(), itm );
+                    }
+                    else
+                    {
+                        pos.insertItem( index, itm );
                     }
                 }
 
@@ -169,33 +164,35 @@ public class TwoFourTree implements Dictionary
      * into the tree
      *
      * @param itm
+     * @param tfn
      * @return
      */
-    public TFNode searchTree( Item itm )
+    public TFNode searchTree( Item itm, TFNode tfn )
     {
         int ffgeRslt;
-        TFNode pos = treeRoot;
+        TFNode pos = tfn;
 
-        ffgeRslt = FFGE( itm, pos );
+        ffgeRslt = FFGE( itm, pos );  //STEP INTO THIS KWF
 
         if ( ffgeRslt == -1 )   //If no greater val found
         {
-            if ( pos.getChild( 2 ) != null )  //Check to see if itemArr is full
+            if ( pos.getChild( 3 ) != null )  //Check to see if rChild is null
             {
-                pos = pos.getChild( 2 );
-            }
-            else
-            {
-                return pos;
+                pos = pos.getChild( 3 );
+                searchTree( itm, pos );
             }
         }
-        else if ( pos.getChild( ffgeRslt ) != null )
+        else if ( 0 <= ffgeRslt && ffgeRslt <= 3 )
         {
-            pos = pos.getChild( ffgeRslt );
+            if ( pos.getChild( ffgeRslt ) != null )
+            {
+                pos = pos.getChild( ffgeRslt );
+                searchTree( itm, pos );
+            }
         }
         else
         {
-            return pos;
+            pos = null;
         }
 
         return pos;
@@ -213,19 +210,15 @@ public class TwoFourTree implements Dictionary
      */
     public int FFGE( Item itm, TFNode tfn )
     {
-        boolean foundGreater = false;
         TFNode pos = tfn;
         int index = -1;
 
-        while ( !foundGreater )  //While we have found no greater value than that of itm's key
+        for ( int k = 0; k < pos.getNumItems(); ++k )  //Iterate thru TFN's Item array
         {
-            for ( int k = 0; k < pos.getNumItems(); ++k )  //Iterate thru TFN's Item array
+            if ( treeComp.isLessThanOrEqualTo( itm.key(), pos.getItem( k ).key() ) )  //If an Item's key in pos >= itm's key
             {
-                if ( ( Integer ) pos.getItem( k ).key() >= ( Integer ) itm.key() )  //If an Item's key in pos >= itm's key
-                {
-                    foundGreater = true;
-                    index = k;
-                }
+                index = k;
+                break;    //If fG, break out otherwise we keep setting index
             }
         }
 
