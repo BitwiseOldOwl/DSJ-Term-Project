@@ -74,7 +74,7 @@ public class TwoFourTree implements Dictionary
      * @param element to be inserted
      */
     @Override
-    public void insertElement( Object key, Object element ) throws TFNodeException  //INDEV KWF HOOK UP KIDS
+    public void insertElement( Object key, Object element ) throws TFNodeException
     {
         //If bad val given
         if ( !treeComp.isComparable( key ) || !treeComp.isComparable( element ) )
@@ -85,9 +85,9 @@ public class TwoFourTree implements Dictionary
         else
         {
             Item itm = new Item( key, element );
-            TFNode pos = null;  //Debugging KWF
+            TFNode pos;
 
-            if ( treeRoot == null )
+            if ( treeRoot == null )  //First insert
             {
                 treeRoot = new TFNode();
                 treeRoot.addItem( 0, itm );
@@ -96,22 +96,9 @@ public class TwoFourTree implements Dictionary
             {
                 pos = searchTree( itm, treeRoot );
 
-                if ( pos.getNumItems() == 0 )
-                {
-                    pos.addItem( 0, itm );
-                }
-                else
-                {
-                    int index = FFGE( itm, pos );
-                    if ( index == -1 )
-                    {
-                        pos.addItem( pos.getNumItems(), itm );
-                    }
-                    else
-                    {
-                        pos.insertItem( index, itm );
-                    }
-                }
+                int index = FFGE( itm, pos );
+
+                pos.insertItem( index, itm );
 
                 //Check for/handle overflow
                 handleOverflow( pos );
@@ -126,9 +113,10 @@ public class TwoFourTree implements Dictionary
      */
     public void handleOverflow( TFNode pos )
     {
-        Item itm = new Item();
+        Item itm;
+        Item itm2;
         TFNode nN = new TFNode();
-        TFNode par = pos.getParent();
+        TFNode par;
         int index;
 
         if ( pos.getNumItems() == 4 )
@@ -138,29 +126,33 @@ public class TwoFourTree implements Dictionary
                 treeRoot = new TFNode();
                 treeRoot.setChild( 0, pos );
                 pos.setParent( treeRoot );
-                index = 0;
-                par = pos.getParent();
-
-                itm = pos.removeItem( 2 );
-                nN.addItem( 0, pos.removeItem( 2 ) );  //Because 3 is NOW 2 BECAUSE removeItem()!!!!
-                par.insertItem( index, itm );
-
-                nN.setParent( par );
-                par.setChild( index + 1, par );
             }
-            else
+
+            itm2 = pos.deleteItem( 3 );
+            itm = pos.deleteItem( 2 );
+            par = pos.getParent();  //null if treeRoot
+            index = FFGE( itm, par );
+            nN.addItem( 0, itm2 );
+            par.insertItem( index, itm );
+            //Parent/Child handling
+            nN.setParent( par );
+            par.setChild( index + 1, nN );
+            //Child/Child handling
+            if ( pos.getChild( 3 ) != null )  //If it's null, no harm no foul
             {
-                itm = pos.removeItem( 2 );
-                nN.addItem( 0, pos.removeItem( 2 ) );  //Because 3 is NOW 2 BECAUSE removeItem()!!!!
-                index = FFGE( itm, par );
-                par.insertItem( index, itm );
-
-                nN.setParent( par );
-                index = FFGE( itm, par );
-                par.setChild( index + 1, par );
-
-                handleOverflow( par );
+                TFNode pC3 = pos.getChild( 3 );
+                TFNode pC4 = pos.getChild( 4 );
+                nN.setChild( 0, pC3 );
+                nN.setChild( 1, pC4 );
+                pC3.setParent( nN );
+                pC4.setParent( nN );
             }
+        }
+        
+        par = pos.getParent();
+        if( par != null )
+        {
+            handleOverflow( pos.getParent() );
         }
     }
 
@@ -177,17 +169,9 @@ public class TwoFourTree implements Dictionary
         int ffgeRslt;
         TFNode pos = tfn;
 
-        ffgeRslt = FFGE( itm, pos );  //STEP INTO THIS KWF
+        ffgeRslt = FFGE( itm, pos );
 
-        if ( ffgeRslt == -1 )   //If no greater val found
-        {
-            if ( pos.getChild( 3 ) != null )  //Check to see if rChild is null
-            {
-                pos = pos.getChild( 3 );
-                searchTree( itm, pos );
-            }
-        }
-        else if ( 0 <= ffgeRslt && ffgeRslt <= 3 )
+        if ( 0 <= ffgeRslt && ffgeRslt <= pos.getNumItems() )
         {
             if ( pos.getChild( ffgeRslt ) != null )
             {
@@ -197,17 +181,17 @@ public class TwoFourTree implements Dictionary
         }
         else
         {
-            pos = null;
+            pos = null;  //Should never happen
         }
 
-        return pos;
+        return pos;  //CATCHALL
     }
 
     /**
      * Finds and returns the index of the first Item in a node with a value
-     * greater than or equal to the Item given. If this function returns a -1,
-     * there was no Item in the node with a key value greater than or equal to
-     * that of the item passed.
+     * greater than or equal to the Item given. If this function returns
+     * pos.getNumItems(), there was no Item in the node with a key value greater
+     * than or equal to that of the item passed.
      *
      * @param itm
      * @param tfn
@@ -215,13 +199,13 @@ public class TwoFourTree implements Dictionary
      */
     public int FFGE( Item itm, TFNode tfn ) throws TFNodeException
     {
-        TFNode pos = tfn;
-        int index = -1;
-
         if ( tfn == null )
         {
             throw new TFNodeException( "TFNode passed is null" );
         }
+
+        TFNode pos = tfn;
+        int index = pos.getNumItems();
 
         for ( int k = 0; k < pos.getNumItems(); ++k )  //Iterate thru TFN's Item array
         {
@@ -391,58 +375,76 @@ public class TwoFourTree implements Dictionary
 
         Integer myInt1 = new Integer( 47 );
         myTree.insertElement( myInt1, myInt1 );
+        myTree.checkTree();
         myTree.printAllElements();
         Integer myInt2 = new Integer( 83 );
         myTree.insertElement( myInt2, myInt2 );
+        myTree.checkTree();
         myTree.printAllElements();
         Integer myInt3 = new Integer( 22 );
         myTree.insertElement( myInt3, myInt3 );
+        myTree.checkTree();
         myTree.printAllElements();
         Integer myInt4 = new Integer( 16 );
         myTree.insertElement( myInt4, myInt4 );
+        myTree.checkTree();
         myTree.printAllElements();
         Integer myInt5 = new Integer( 49 );
         myTree.insertElement( myInt5, myInt5 );
+        myTree.checkTree();
         myTree.printAllElements();
         Integer myInt6 = new Integer( 100 );
         myTree.insertElement( myInt6, myInt6 );
-
+        myTree.checkTree();
+        myTree.printAllElements();
         Integer myInt7 = new Integer( 38 );
         myTree.insertElement( myInt7, myInt7 );
-
+        myTree.checkTree();
+        myTree.printAllElements();
         Integer myInt8 = new Integer( 3 );
         myTree.insertElement( myInt8, myInt8 );
-
+        myTree.checkTree();
+        myTree.printAllElements();
         Integer myInt9 = new Integer( 53 );
         myTree.insertElement( myInt9, myInt9 );
-
+        myTree.checkTree();
+        myTree.printAllElements();
         Integer myInt10 = new Integer( 66 );
         myTree.insertElement( myInt10, myInt10 );
-
+        myTree.checkTree();
+        myTree.printAllElements();
         Integer myInt11 = new Integer( 19 );
         myTree.insertElement( myInt11, myInt11 );
-
+        myTree.checkTree();
+        myTree.printAllElements();
         Integer myInt12 = new Integer( 23 );
         myTree.insertElement( myInt12, myInt12 );
-
+        myTree.checkTree();
+        myTree.printAllElements();
         Integer myInt13 = new Integer( 24 );
         myTree.insertElement( myInt13, myInt13 );
-
+        myTree.checkTree();
+        myTree.printAllElements();
         Integer myInt14 = new Integer( 88 );
         myTree.insertElement( myInt14, myInt14 );
-
+        myTree.checkTree();
+        myTree.printAllElements();
         Integer myInt15 = new Integer( 1 );
         myTree.insertElement( myInt15, myInt15 );
-
+        myTree.checkTree();
+        myTree.printAllElements();
         Integer myInt16 = new Integer( 97 );
         myTree.insertElement( myInt16, myInt16 );
-
+        myTree.checkTree();
+        myTree.printAllElements();
         Integer myInt17 = new Integer( 94 );
         myTree.insertElement( myInt17, myInt17 );
-
+        myTree.checkTree();
+        myTree.printAllElements();
         Integer myInt18 = new Integer( 35 );
         myTree.insertElement( myInt18, myInt18 );
-
+        myTree.checkTree();
+        myTree.printAllElements();
         Integer myInt19 = new Integer( 51 );
         myTree.insertElement( myInt19, myInt19 );
 
