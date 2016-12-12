@@ -103,7 +103,7 @@ public class TwoFourTree implements Dictionary
                 else
                 {
                     int index = FFGE( itm, pos );
-                    if( index == -1 )
+                    if ( index == -1 )
                     {
                         pos.addItem( pos.getNumItems(), itm );
                     }
@@ -126,36 +126,41 @@ public class TwoFourTree implements Dictionary
      */
     public void handleOverflow( TFNode pos )
     {
-        Item item2 = new Item();
+        Item itm = new Item();
         TFNode nN = new TFNode();
         TFNode par = pos.getParent();
         int index;
 
         if ( pos.getNumItems() == 4 )
         {
-            if ( pos == treeRoot )
+            if ( pos == treeRoot )  //If root overflows
             {
                 treeRoot = new TFNode();
                 treeRoot.setChild( 0, pos );
                 pos.setParent( treeRoot );
+                index = 0;
+                par = pos.getParent();
+
+                itm = pos.removeItem( 2 );
+                nN.addItem( 0, pos.removeItem( 2 ) );  //Because 3 is NOW 2 BECAUSE removeItem()!!!!
+                par.insertItem( index, itm );
+
+                nN.setParent( par );
+                par.setChild( index + 1, par );
             }
-
-            item2 = pos.removeItem( 2 );
-            nN.addItem( 0, pos.getItem( 2 ) );  //On the "new" 2
-        }
-
-        if ( par != null )
-        {
-            for ( int k = 0; k < par.getNumItems(); ++k )
+            else
             {
-                if ( treeComp.isLessThanOrEqualTo( item2.element(), par.getItem( k ) ) )
-                {
-                    index = k;
-                    par.insertItem( index, item2 );
-                }
-            }
+                itm = pos.removeItem( 2 );
+                nN.addItem( 0, pos.removeItem( 2 ) );  //Because 3 is NOW 2 BECAUSE removeItem()!!!!
+                index = FFGE( itm, par );
+                par.insertItem( index, itm );
 
-            handleOverflow( par );
+                nN.setParent( par );
+                index = FFGE( itm, par );
+                par.setChild( index + 1, par );
+
+                handleOverflow( par );
+            }
         }
     }
 
@@ -208,10 +213,15 @@ public class TwoFourTree implements Dictionary
      * @param tfn
      * @return
      */
-    public int FFGE( Item itm, TFNode tfn )
+    public int FFGE( Item itm, TFNode tfn ) throws TFNodeException
     {
         TFNode pos = tfn;
         int index = -1;
+
+        if ( tfn == null )
+        {
+            throw new TFNodeException( "TFNode passed is null" );
+        }
 
         for ( int k = 0; k < pos.getNumItems(); ++k )  //Iterate thru TFN's Item array
         {
