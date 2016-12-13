@@ -91,14 +91,14 @@ public class TwoFourTree implements Dictionary
             {
                 treeRoot = new TFNode();
                 treeRoot.addItem( 0, itm );
+                ++size;
             }
             else
             {
                 pos = searchTree( itm, treeRoot );
-
                 int index = FFGE( itm, pos );
-
                 pos.insertItem( index, itm );
+                ++size;
 
                 //Check for/handle overflow
                 handleOverflow( pos );
@@ -154,6 +154,15 @@ public class TwoFourTree implements Dictionary
         {
             handleOverflow( pos.getParent() );
         }
+    }
+    
+    /**
+     * Handles potential underflow of pos
+     * @param pos 
+     */
+    public void handleUnderflow( TFNode pos )
+    {
+        
     }
 
     /**
@@ -230,7 +239,29 @@ public class TwoFourTree implements Dictionary
     @Override
     public Object removeElement( Object key ) throws ElementNotFoundException
     {
-        throw new UnsupportedOperationException( "Remove not yet supported" );
+        TFNode pos;
+        Item itm = new Item( key, 0 );
+        Item ret;
+        int index;
+        
+        if( !treeComp.isComparable( key ) )
+        {
+            throw new ElementNotFoundException( "Key passed is invalid and could not be located" );
+        }
+        if( this.isEmpty() )
+        {
+            throw new ElementNotFoundException( "There are no elements to remove" );
+        }
+        
+        //If not leaf call successor?
+        
+        pos = searchTree( itm, treeRoot );
+        index = FFGE( itm ,pos );
+        ret = pos.removeItem( index );
+        
+        handleUnderflow( pos );
+        
+        return ret.element();
     }
 
     /**
