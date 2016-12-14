@@ -62,9 +62,10 @@ public class TwoFourTree implements Dictionary
      * @return object corresponding to key; null if not found
      */
     @Override
-    public Object findElement( Object key )   //KWF: This needs to be implemented first
+    public Object findElement( Object key )
     {
-        throw new UnsupportedOperationException( "Not supported yet" );
+        Item itm = new Item( key, 0 );
+        return FFGE( itm, treeRoot );
     }
 
     /**
@@ -164,48 +165,51 @@ public class TwoFourTree implements Dictionary
     public void handleUnderflow( TFNode pos, int index )
     {
         TFNode tracer = pos;
-        Item itm;
-        int ind = index;
-        TFNode passNode; //Change to affected node
-        int passIndex = ind;  //Change to affected index
-        boolean kidChk = false;
-
-        for ( int k = 0; k <= pos.getNumItems(); ++k )  //Check for valid children
+        
+        if ( checkLeftChild( tracer, index ) )
         {
-            if ( pos.getChild( k ) != null )
+            //Pull biggest from left
+            leftTransfer( tracer, index );
+        }
+        else if ( checkRightChild( tracer, index ) )
+        {
+            //Pull smallest from right (removeItem)
+            rightTransfer( tracer, index );
+        }
+        else if ( WCAI( tracer.getChild( index ) ) == 0 || WCAI( tracer.getChild( index ) ) == 1 )
+        {
+            //Left fusion
+            leftFusion( tracer, index );
+            handleUnderflow( tracer, index );
+            if( pos == treeRoot )
             {
-                kidChk = true;
-                break;
+                tracer = pos.getChild( 0 );
+                tracer = treeRoot;
+                tracer.setParent( null );
+            }
+        }
+        else
+        {
+            //Right fusion
+            rightFusion( tracer, index );
+            handleUnderflow( tracer, index );
+        }
+    }
+
+    public int WCAI( TFNode child )
+    {
+        TFNode par = child.getParent();
+        int childNum = -1;
+
+        for ( int k = 0; k < 5; ++k )
+        {
+            if ( child == par.getChild( k ) )
+            {
+                childNum = k;
             }
         }
 
-        if ( kidChk )  //Killcon
-        {
-            if ( checkLeftChild( tracer, ind ) )
-            {
-                //Pull biggest from left
-                leftTransfer( tracer, ind );
-            }
-            else if ( checkRightChild( tracer, ind ) )
-            {
-                //Pull smallest from right (removeItem)
-                rightTransfer( tracer, ind );
-            }
-            else if ( tracer.getChild( ind + 1 ) != null )
-            {
-                passNode = tracer.getChild( ind + 1 );
-                //Right fusion
-                rightFusion( tracer, ind );
-                handleUnderflow( passNode, passIndex );
-            }
-            else
-            {
-                passNode = tracer.getChild( ind );
-                //Left fusion
-                leftFusion( tracer, ind );
-                handleUnderflow( passNode, passIndex );
-            }
-        }
+        return childNum;
     }
 
     public boolean checkLeftChild( TFNode pos, int index )
@@ -239,10 +243,41 @@ public class TwoFourTree implements Dictionary
 
         return true;
     }
-    
+
     public void leftTransfer( TFNode pos, int index )
     {
-        
+        TFNode tracer = pos.getChild( index );
+        Item itm = tracer.removeItem( tracer.getNumItems() - 1 );
+        tracer.addItem( index, itm );
+    }
+
+    public void rightTransfer( TFNode pos, int index )
+    {
+        TFNode tracer = pos.getChild( index + 1 );
+        Item itm = tracer.removeItem( index );
+        tracer.addItem( index, itm );
+    }
+
+    public void leftFusion( TFNode pos, int index )
+    {
+        TFNode lChild = pos.getChild( index );
+        TFNode rChild = pos.getChild( index + 1 );
+        Item itm = rChild.deleteItem( 0 );
+        pos.addItem( index, itm );
+        pos.setChild( 1, lChild );
+        rChild.setParent( null );
+        lChild.addItem( 1, pos.removeItem( index ) );
+    }
+
+    public void rightFusion( TFNode pos, int index )
+    {
+        TFNode lChild = pos.getChild( index );
+        TFNode rChild = pos.getChild( index + 1 );
+        Item itm = lChild.deleteItem( lChild.getNumItems() - 1 );
+        pos.addItem( index, itm );
+        pos.setChild( 0, rChild );
+        lChild.setParent( null );
+        rChild.addItem( 1, pos.removeItem( index ) );
     }
 
     /**
@@ -455,7 +490,7 @@ public class TwoFourTree implements Dictionary
                         System.out.println( "Parent to child confusion" );
                         printTFNode( start );
                     }
-                    for ( int i = childIndex - 1; i >= 0; i-- )
+                    for ( int i = childIndex - 1; i >= 0; i-- )   //Exception for bug found here
                     {
                         if ( start.getChild( i ) == start.getChild( childIndex ) )
                         {
@@ -557,18 +592,21 @@ public class TwoFourTree implements Dictionary
         myTree.insertElement( myInt19, myInt19 );
 
         myTree.printAllElements();
+
         System.out.println( "done" );
 
         myTree = new TwoFourTree( myComp );
         final int TEST_SIZE = 10000;
 
-        for ( int i = 0; i < TEST_SIZE; ++i )
+        for ( int i = 0; i < TEST_SIZE; ++i )  //Insert bugging SPECIFICALLY HERE
         {
             myTree.insertElement( new Integer( i ), new Integer( i ) );
             //          myTree.printAllElements();
             //         myTree.checkTree();
         }
+        
         System.out.println( "removing" );
+        
         for ( int i = 0; i < TEST_SIZE; ++i )
         {
             int out = ( Integer ) myTree.removeElement( new Integer( i ) );
