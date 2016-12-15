@@ -1,5 +1,7 @@
 package javatermproject;
 
+import java.util.Random;
+
 /**
  * Title: Term Project 2-4 Trees Description: Copyright: Copyright (c) 2001
  * Company: Brennon Gee, Jacob Van Veldhuzien Date last modified: 5 Dec 2016
@@ -65,7 +67,8 @@ public class TwoFourTree implements Dictionary
     public Object findElement( Object key )
     {
         Item itm = new Item( key, 0 );
-        return FFGE( itm, treeRoot );
+        TFNode pos = searchTree( itm, treeRoot );
+        return FE( itm, pos );
     }
 
     /**
@@ -98,11 +101,25 @@ public class TwoFourTree implements Dictionary
             {
                 pos = searchTree( itm, treeRoot );
                 int index = FFGE( itm, pos );
-                pos.insertItem( index, itm );
+                int eq = FE(itm, pos);
+                TFNode insertNode = null;
+                if (eq == -1 || pos.getChild( 0) == null){
+                    pos.insertItem( index, itm );
+                    insertNode = pos;
+                }
+                else {
+                    TFNode succ = pos.getChild( index + 1);
+                    while (succ.getChild( 0) != null){
+                        succ = succ.getChild(0);
+                    }
+                    succ.insertItem( 0, itm);
+                    insertNode = succ;
+                }
+                
                 ++size;
 
                 //Check for/handle overflow
-                handleOverflow( pos );
+                handleOverflow( insertNode );
             }
         }
     }
@@ -114,11 +131,14 @@ public class TwoFourTree implements Dictionary
      */
     public void handleOverflow( TFNode pos )
     {
-        Item itm;
-        Item itm2;
         TFNode nN = new TFNode();
-        TFNode par;
+        TFNode par = null;
         int index;
+        int childIndex;
+        Item itm3;
+        Item itm2;
+        TFNode kid3;
+        TFNode kid4;
 
         if ( pos.getNumItems() == 4 )
         {
@@ -129,28 +149,27 @@ public class TwoFourTree implements Dictionary
                 pos.setParent( treeRoot );
             }
 
-            itm2 = pos.deleteItem( 3 );
-            itm = pos.deleteItem( 2 );
             par = pos.getParent();  //null if treeRoot
-            index = FFGE( itm, par );
-            nN.addItem( 0, itm2 );
-            par.insertItem( index, itm );
-            //Parent/Child handling
-            nN.setParent( par );
-            par.setChild( index + 1, nN );
-            //Child/Child handling
-            if ( pos.getChild( 3 ) != null )  //If it's null, no harm no foul
+            itm2 = pos.getItem( 2 );
+            itm3 = pos.getItem( 3 );
+            kid3 = pos.getChild( 3 );
+            kid4 = pos.getChild( 4 );
+            nN.addItem( 0, itm3 );
+            nN.setChild( 0, kid3 );
+            nN.setChild( 1, kid4 );
+            if ( nN.getChild( 0 ) != null )
             {
-                TFNode pC3 = pos.getChild( 3 );
-                TFNode pC4 = pos.getChild( 4 );
-                nN.setChild( 0, pC3 );
-                nN.setChild( 1, pC4 );
-                pC3.setParent( nN );
-                pC4.setParent( nN );
+                nN.getChild( 0 ).setParent( nN );
+                nN.getChild( 1 ).setParent( nN );
             }
+            pos.deleteItem( 3 );
+            pos.deleteItem( 2 );
+            childIndex = WCAI( pos );
+            par.insertItem( childIndex, itm2 );
+            par.setChild( childIndex + 1, nN );
+            nN.setParent( par );
         }
 
-        par = pos.getParent();
         if ( par != null )
         {
             handleOverflow( pos.getParent() );
@@ -162,37 +181,131 @@ public class TwoFourTree implements Dictionary
      *
      * @param pos
      */
-    public void handleUnderflow( TFNode pos, int index )
+    public void handleUnderflow( TFNode pos )
     {
-        TFNode tracer = pos;
-        
-        if ( checkLeftChild( tracer, index ) )
+        TFNode par = pos.getParent();
+        Item search;
+        int childIndex = WCAI( pos );
+
+        if ( pos == treeRoot )
         {
-            //Pull biggest from left
-            leftTransfer( tracer, index );
-        }
-        else if ( checkRightChild( tracer, index ) )
-        {
-            //Pull smallest from right (removeItem)
-            rightTransfer( tracer, index );
-        }
-        else if ( WCAI( tracer.getChild( index ) ) == 0 || WCAI( tracer.getChild( index ) ) == 1 )
-        {
-            //Left fusion
-            leftFusion( tracer, index );
-            handleUnderflow( tracer, index );
-            if( pos == treeRoot )
+            treeRoot = pos.getChild( 0 );
+            if ( treeRoot != null )
             {
-                tracer = pos.getChild( 0 );
-                tracer = treeRoot;
-                tracer.setParent( null );
+                treeRoot.setParent( null );
             }
+        }
+        else if ( childIndex < par.getNumItems() && par.getChild( childIndex + 1 ).getNumItems() > 1 )
+        {
+            leftTransfer( pos, childIndex );
+        }
+        else if ( childIndex > 0 && par.getChild( childIndex - 1 ).getNumItems() > 1 )
+        {
+            rightTransfer( pos, childIndex );
+        }
+        else if ( childIndex > 0 )
+        {
+            leftFusion( pos, childIndex );
         }
         else
         {
-            //Right fusion
-            rightFusion( tracer, index );
-            handleUnderflow( tracer, index );
+            rightFusion( pos, childIndex );
+        }
+    }
+
+    /**
+     * Performs a left transfer on the underflowing node
+     *
+     * @param pos
+     * @param childInd
+     */
+    public void leftTransfer( TFNode pos, int childInd )
+    {
+        TFNode par = pos.getParent();
+        TFNode rightSib = par.getChild( childInd + 1 );
+        TFNode tempKid;
+
+        pos.addItem( 0, par.getItem( childInd ) );
+        par.replaceItem( childInd, rightSib.getItem( 0 ) );
+        tempKid = rightSib.getChild( 0 );
+        pos.setChild( 1, tempKid );
+        if ( tempKid != null )
+        {
+            tempKid.setParent( pos );
+        }
+        rightSib.removeItem( 0 );
+    }
+
+    /**
+     * Performs a right transfer on the underflowing node
+     *
+     * @param pos
+     * @param childInd
+     */
+    public void rightTransfer( TFNode pos, int childInd )
+    {
+        TFNode par = pos.getParent();
+        TFNode leftSib = par.getChild( childInd - 1 );
+        TFNode tempKid;
+
+        pos.insertItem( 0, par.getItem( childInd-1 ) );
+        tempKid = leftSib.getChild( leftSib.getNumItems() );
+        par.replaceItem( childInd-1, leftSib.deleteItem( leftSib.getNumItems() - 1 ) );
+        pos.setChild( 0, tempKid );
+        if ( tempKid != null )
+        {
+            tempKid.setParent( pos );
+        }
+    }
+
+    /**
+     * Performs a right fusion on the underflowing node
+     *
+     * @param pos
+     * @param childInd
+     */
+    public void rightFusion( TFNode pos, int childInd )
+    {
+        TFNode par = pos.getParent();
+        TFNode rightSib = par.getChild( childInd + 1 );
+        Item itm = par.removeItem( childInd );
+
+        rightSib.insertItem( 0, itm );
+        if ( pos.getChild( 0 ) != null )
+        {
+            rightSib.setChild( 0, pos.getChild( 0 ) );
+            rightSib.getChild( 0 ).setParent( rightSib );
+        }
+
+        if ( par.getNumItems() == 0 )
+        {
+            handleUnderflow( par );
+        }
+    }
+
+    /**
+     * Performs a left fusion on the underflowing
+     *
+     * @param pos
+     * @param childInd
+     */
+    public void leftFusion( TFNode pos, int childInd )
+    {
+        TFNode par = pos.getParent();
+        TFNode leftSib = par.getChild( childInd - 1 );
+        Item itm = par.removeItem( childInd-1 );
+
+        par.setChild( childInd - 1, leftSib );
+        leftSib.addItem( leftSib.getNumItems(), itm );
+        if ( pos.getChild( 0 ) != null )
+        {
+            leftSib.setChild( leftSib.getNumItems(), pos.getChild( 0 ) );
+            leftSib.getChild( leftSib.getNumItems() ).setParent( leftSib );
+        }
+
+        if ( par.getNumItems() == 0 )
+        {
+            handleUnderflow( par );
         }
     }
 
@@ -201,83 +314,19 @@ public class TwoFourTree implements Dictionary
         TFNode par = child.getParent();
         int childNum = -1;
 
-        for ( int k = 0; k < 5; ++k )
+        if ( par != null )
         {
-            if ( child == par.getChild( k ) )
+            for ( int k = 0; k <= par.getNumItems(); ++k )
             {
-                childNum = k;
+                if ( child == par.getChild( k ) )
+                {
+                    childNum = k;
+                    break;
+                }
             }
         }
 
         return childNum;
-    }
-
-    public boolean checkLeftChild( TFNode pos, int index )
-    {
-        TFNode tracer = pos.getChild( index );
-
-        if ( tracer == null )
-        {
-            return false;
-        }
-        else if ( tracer.getNumItems() <= 1 )
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    public boolean checkRightChild( TFNode pos, int index )
-    {
-        TFNode tracer = pos.getChild( index + 1 );
-
-        if ( tracer == null )
-        {
-            return false;
-        }
-        else if ( tracer.getNumItems() <= 1 )
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    public void leftTransfer( TFNode pos, int index )
-    {
-        TFNode tracer = pos.getChild( index );
-        Item itm = tracer.removeItem( tracer.getNumItems() - 1 );
-        tracer.addItem( index, itm );
-    }
-
-    public void rightTransfer( TFNode pos, int index )
-    {
-        TFNode tracer = pos.getChild( index + 1 );
-        Item itm = tracer.removeItem( index );
-        tracer.addItem( index, itm );
-    }
-
-    public void leftFusion( TFNode pos, int index )
-    {
-        TFNode lChild = pos.getChild( index );
-        TFNode rChild = pos.getChild( index + 1 );
-        Item itm = rChild.deleteItem( 0 );
-        pos.addItem( index, itm );
-        pos.setChild( 1, lChild );
-        rChild.setParent( null );
-        lChild.addItem( 1, pos.removeItem( index ) );
-    }
-
-    public void rightFusion( TFNode pos, int index )
-    {
-        TFNode lChild = pos.getChild( index );
-        TFNode rChild = pos.getChild( index + 1 );
-        Item itm = lChild.deleteItem( lChild.getNumItems() - 1 );
-        pos.addItem( index, itm );
-        pos.setChild( 0, rChild );
-        lChild.setParent( null );
-        rChild.addItem( 1, pos.removeItem( index ) );
     }
 
     /**
@@ -291,21 +340,16 @@ public class TwoFourTree implements Dictionary
     public TFNode searchTree( Item itm, TFNode tfn )
     {
         int ffgeRslt;
+        int feRslt;
         TFNode pos = tfn;
 
         ffgeRslt = FFGE( itm, pos );
+        feRslt = FE( itm, pos );
 
-        if ( 0 <= ffgeRslt && ffgeRslt <= pos.getNumItems() )
+        if ( pos.getChild( ffgeRslt ) != null && feRslt == -1 )
         {
-            if ( pos.getChild( ffgeRslt ) != null )
-            {
-                pos = pos.getChild( ffgeRslt );
-                searchTree( itm, pos );
-            }
-        }
-        else
-        {
-            pos = null;  //Should never happen
+            pos = pos.getChild( ffgeRslt );
+            pos = searchTree( itm, pos );
         }
 
         return pos;  //CATCHALL
@@ -327,9 +371,14 @@ public class TwoFourTree implements Dictionary
         {
             throw new TFNodeException( "TFNode passed is null" );
         }
+        if ( itm == null || itm.key() == null || itm.element() == null )
+        {
+            throw new TFNodeException( "Item passed is null" );
+        }
 
         TFNode pos = tfn;
         int index = pos.getNumItems();
+        
 
         for ( int k = 0; k < pos.getNumItems(); ++k )  //Iterate thru TFN's Item array
         {
@@ -337,7 +386,34 @@ public class TwoFourTree implements Dictionary
             {
                 index = k;
                 break;    //If fG, break out otherwise we keep setting index
+                
             }
+        }
+
+        return index;
+    }
+
+    public int FE( Item itm, TFNode tfn ) throws TFNodeException
+    {
+        if ( tfn == null )
+        {
+            throw new TFNodeException( "TFNode passed is null" );
+        }
+
+        TFNode pos = tfn;
+        int index = -1;
+
+        int cnt = 0;
+
+        while ( cnt < pos.getNumItems() )  //Iterate thru TFN's Item array
+        {
+            if ( treeComp.isEqual( itm.key(), pos.getItem( cnt ).key() ) )  //If an Item's key in pos >= itm's key
+            {
+                index = cnt;
+                break;    //If fG, break out otherwise we keep setting index
+            }
+
+            ++cnt;
         }
 
         return index;
@@ -355,6 +431,7 @@ public class TwoFourTree implements Dictionary
     public Object removeElement( Object key ) throws ElementNotFoundException
     {
         TFNode pos;
+        TFNode tracer;
         Item itm = new Item( key, 0 );
         Item ret;
         int index;
@@ -363,17 +440,44 @@ public class TwoFourTree implements Dictionary
         {
             throw new ElementNotFoundException( "Key passed is invalid and could not be located" );
         }
-        if ( this.isEmpty() )
+        if ( isEmpty() )
         {
             throw new ElementNotFoundException( "There are no elements to remove" );
         }
 
         pos = searchTree( itm, treeRoot );
-        index = FFGE( itm, pos );
-        ret = pos.deleteItem( index );
-        handleUnderflow( pos, index );
+        index = FE( itm, pos );
 
-        return ret.element();  //DO nullchk
+        if ( index == -1 )  //Err state
+        {
+            throw new ElementNotFoundException( "Element not found" );
+        }
+
+        ret = pos.getItem( index );
+        if ( pos.getChild( 0 ) != null )  //NOT a leaf
+        {
+            tracer = pos.getChild( index + 1 );
+            while ( tracer.getChild( 0 ) != null )  //Not a leaf
+            {
+                tracer = tracer.getChild( 0 );
+            }
+
+            pos.replaceItem( index, tracer.removeItem( 0 ) );
+            if ( tracer.getNumItems() == 0 )
+            {
+                handleUnderflow( tracer );
+            }
+        }
+        else
+        {
+            pos.removeItem( index );
+            if ( pos.getNumItems() == 0 )
+            {
+                handleUnderflow( pos );
+            }
+        }
+
+        return ret.element();
     }
 
     /**
@@ -596,25 +700,35 @@ public class TwoFourTree implements Dictionary
         System.out.println( "done" );
 
         myTree = new TwoFourTree( myComp );
-        final int TEST_SIZE = 10000;
+        final int TEST_SIZE = 1000000;
+        Random rand = new Random( );
+        int[] nums = new int[ TEST_SIZE ];
 
-        for ( int i = 0; i < TEST_SIZE; ++i )  //Insert bugging SPECIFICALLY HERE
-        {
-            myTree.insertElement( new Integer( i ), new Integer( i ) );
-            //          myTree.printAllElements();
-            //         myTree.checkTree();
-        }
-        
-        System.out.println( "removing" );
-        
         for ( int i = 0; i < TEST_SIZE; ++i )
         {
-            int out = ( Integer ) myTree.removeElement( new Integer( i ) );
-            if ( out != i )
+            int num = rand.nextInt( TEST_SIZE / 5 );
+            nums[ i ] = num;
+            myTree.insertElement( new Integer( num ), new Integer( num ) );
+            //myTree.printAllElements();
+            //System.out.println();
+            //myTree.checkTree();
+        }
+        myTree.printAllElements();
+        System.out.println( "removing" );
+
+        for ( int i = 0; i < TEST_SIZE; ++i )
+        {
+            int num = nums[ i ];
+            if ( i > TEST_SIZE - 25 )
             {
-                throw new TwoFourTreeException( "main: wrong element removed" );
+                System.out.println( "removing " + num );
             }
-            if ( i > TEST_SIZE - 15 )
+            int out = ( Integer ) myTree.removeElement( new Integer( num ) );
+            if ( out != num )
+            {
+                throw new TwoFourTreeException( "main: wrong element removed" );  //This line is evil
+            }
+            if ( i > TEST_SIZE - 25 )
             {
                 myTree.printAllElements();
             }
